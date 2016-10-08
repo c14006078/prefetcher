@@ -1,3 +1,8 @@
+#ifndef DEBUG_H
+#define DEBUG_H
+
+#include <stdio.h>
+
 void show_vtr(int* in, int num)
 {
     for(int i = 0; i < num; i++)
@@ -18,4 +23,4 @@ void show_sse_mtx(__m128i a, __m128i b, __m128i c, __m128i d)
     show_vtr((int *) &c, 4);
     show_vtr((int *) &d, 4);
 }
-
+#endif

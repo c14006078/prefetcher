@@ -1,7 +1,11 @@
 #ifndef TRANSPOSE_IMPL
 #define TRANSPOSE_IMPL
 
+#include "impl.h"
+
+#ifdef DEBUG
 #include "debug.h"
+#endif
 
 void naive_transpose(int *src, int *dst, int w, int h)
 {
@@ -94,8 +98,8 @@ void sse_prefetch_transpose(int *src, int *dst, int w, int h)
         for (int y = 0; y < h; y += 8) {
             __m256i I0 = _mm_loadu_si256((__m256i *)(src + (y + 0) * w + x));
             __m256i I1 = _mm_loadu_si256((__m256i *)(src + (y + 2) * w + x));
-            __m128i T0 = _mm_unpacklo_epi32(I0, I1);
-            __m128i T1 = _mm_unpacklo_epi32(I2, I3);
+            __m256i T0 = _mm_unpacklo_epi32(I0, I1);
+            __m256i T1 = _mm_unpacklo_epi32(I2, I3);
             I0 = _mm_unpacklo_epi64(T0, T1);
             I1 = _mm_unpackhi_epi64(T0, T1);
             I2 = _mm_unpacklo_epi64(T2, T3);
