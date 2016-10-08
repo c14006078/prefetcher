@@ -6,6 +6,7 @@
 #include <assert.h>
 
 #include <xmmintrin.h>
+#include <immintrin.h>
 
 #define TEST_W 4096
 #define TEST_H 4096
