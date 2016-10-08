@@ -34,8 +34,23 @@ int main(int argc, char *argv[])
 {
     {
         struct timespec start, end;
+
+#ifdef ALIGN
+#include <malloc.h>
+        int *src  = (int *) memalign(sizeof(int) * TEST_W * TEST_H, TEST_W * sizeof(int));
+        int *out = (int *) memalign(sizeof(int) * TEST_W * TEST_H, TEST_W * sizeof(int));
+        /*memset( src, 0, sizeof(int) * TEST_W * TEST_H);
+        memset( out, 0, sizeof(int) * TEST_W * TEST_H);*/
+
+        /*        int _src[TEST_W * TEST_H] __attribute__((aligned(16)));
+                int _out[TEST_W * TEST_H] __attribute__((aligned(16)));
+
+                int *src = _src;
+                int *out = _out;*/
+#else
         int *src  = (int *) malloc(sizeof(int) * TEST_W * TEST_H);
         int *out = (int *) malloc(sizeof(int) * TEST_W * TEST_H);
+#endif
 
         srand(time(NULL));
         for (int y = 0; y < TEST_H; y++)
@@ -44,14 +59,23 @@ int main(int argc, char *argv[])
 
 #ifdef SSE_PREFETCH
         clock_gettime(CLOCK_REALTIME, &start);
+#ifdef ALIGN
+        sse_prefetch_transpose_align(src, out, TEST_W, TEST_H);
+#else
         sse_prefetch_transpose(src, out, TEST_W, TEST_H);
+#endif
         clock_gettime(CLOCK_REALTIME, &end);
         printf("sse prefetch: \t %ld us\n", diff_in_us(start, end));
 #endif
 
+
 #ifdef SSE
         clock_gettime(CLOCK_REALTIME, &start);
+#ifdef ALIGN
+        sse_transpose_align(src, out, TEST_W, TEST_H);
+#else
         sse_transpose(src, out, TEST_W, TEST_H);
+#endif
         clock_gettime(CLOCK_REALTIME, &end);
         printf("sse: \t\t %ld us\n", diff_in_us(start, end));
 #endif
@@ -63,8 +87,10 @@ int main(int argc, char *argv[])
         printf("naive: \t\t %ld us\n", diff_in_us(start, end));
 #endif
 
+#ifndef ALIGN
         free(src);
         free(out);
+#endif
     }
 
     return 0;
