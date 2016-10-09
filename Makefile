@@ -32,20 +32,20 @@ time: default
 
 cache-test: default
 	perf stat --repeat 100 \
-	 -e cache-misses,cache-references,instructions,cycles \
-	  ./time_native
+	-e cache-misses,cache-references,instructions,cycles \
+	./time_naive
 	perf stat --repeat 100 \
-	 -e cache-misses,cache-references,instructions,cycles \
-	  ./time_sse
+	-e cache-misses,cache-references,instructions,cycles \
+	 ./time_sse
 	perf stat --repeat 100 \
-	 -e cache-misses,cache-references,instructions,cycles \
-	  ./time_sse_prefetch
+	-e cache-misses,cache-references,instructions,cycles \
+	./time_sse_prefetch
 	perf stat --repeat 100 \
-	 -e cache-misses,cache-references,instructions,cycles \
-	  ./time_sse_align
+	-e cache-misses,cache-references,instructions,cycles \
+	./time_sse_align
 	perf stat --repeat 100 \
-	 -e cache-misses,cache-references,instructions,cycles \
-	  ./time_sse_prefetch_align
+	-e cache-misses,cache-references,instructions,cycles \
+	./time_sse_prefetch_align
 
 clean:
 	$(RM) $(EXECUTABLE)
