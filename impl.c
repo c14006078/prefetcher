@@ -16,6 +16,9 @@ void naive_transpose(int *src, int *dst, int w, int h)
 
 void sse_transpose(int *src, int *dst, int w, int h)
 {
+#ifdef DEBUG
+    static int sse_times = 0;
+#endif
     for (int x = 0; x < w; x += 4) {
         for (int y = 0; y < h; y += 4) {
             __m128i I0 = _mm_loadu_si128((__m128i *)(src + (y + 0) * w + x));
@@ -24,7 +27,6 @@ void sse_transpose(int *src, int *dst, int w, int h)
             __m128i I3 = _mm_loadu_si128((__m128i *)(src + (y + 3) * w + x));
 
 #ifdef DEBUG
-            static int sse_times = 0;
             if( sse_times < 1) {
                 printf("load\n");
                 show_sse_mtx(I0, I1, I2, I3);
@@ -48,7 +50,7 @@ void sse_transpose(int *src, int *dst, int w, int h)
             I3 = _mm_unpackhi_epi64(T2, T3);
 
 #ifdef DEBUG
-            if( sse_times++ < 1) {
+            if( sse_times < 1) {
                 printf("unpacklo/hi 64\n");
                 show_sse_mtx(I0, I1, I2, I3);
             }
@@ -60,6 +62,9 @@ void sse_transpose(int *src, int *dst, int w, int h)
             _mm_storeu_si128((__m128i *)(dst + ((x + 3) * h) + y), I3);
         }
     }
+#ifdef DEBUG
+    sse_times++;
+#endif
 }
 
 void sse_prefetch_transpose(int *src, int *dst, int w, int h)

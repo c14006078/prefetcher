@@ -31,27 +31,50 @@ int main(int argc, char *argv[])
 {
     /* verify the result of 4x4 matrix */
     {
-        int testin[16] = { 0, 1,  2,  3,  4,  5,  6,  7,
+        if(argc != 2) {
+            fprintf(stderr, "Usage: ./main test_matrix_raw\nExample: ./main 32\n");
+            exit(-1);
+        }
+
+        int rows, cols, size;
+        rows = cols = atoi(argv[1]);
+        size = rows * cols;
+
+        int* testin =(int *) malloc(sizeof(int) * size);
+        int* testout =(int *) malloc(sizeof(int) * size);
+        int* expected =(int *) malloc(sizeof(int) * size);
+
+        /*init testin and expected*/
+        for (int y = 0; y < rows; y++)
+            for (int x = 0; x < cols; x++)
+                testin[y * cols + x] = y * cols + x;
+
+        for (int x = 0; x < cols; x++)
+            for (int y = 0; y < rows; y++)
+                expected[y * cols + x] = x * rows + y;
+
+
+        /*int testin[16] = { 0, 1,  2,  3,  4,  5,  6,  7,
                            8, 9, 10, 11, 12, 13, 14, 15
                          };
         int testout[16];
         int expected[16] = { 0, 4,  8, 12, 1, 5,  9, 13,
                              2, 6, 10, 14, 3, 7, 11, 15
-                           };
+                           };*/
 
-        for (int y = 0; y < 4; y++) {
-            for (int x = 0; x < 4; x++)
-                printf(" %2d", testin[y * 4 + x]);
+        for (int y = 0; y < rows; y++) {
+            for (int x = 0; x < cols; x++)
+                printf(" %2d", testin[y * cols + x]);
             printf("\n");
         }
         printf("\n");
-        sse_transpose(testin, testout, 4, 4);
-        for (int y = 0; y < 4; y++) {
-            for (int x = 0; x < 4; x++)
-                printf(" %2d", testout[y * 4 + x]);
+        sse_transpose(testin, testout, cols, rows);
+        for (int y = 0; y < rows; y++) {
+            for (int x = 0; x < cols; x++)
+                printf(" %2d", testout[y * cols + x]);
             printf("\n");
         }
-        assert(0 == memcmp(testout, expected, 16 * sizeof(int)) &&
+        assert(0 == memcmp(testout, expected, size * sizeof(int)) &&
                "Verification fails");
     }
 

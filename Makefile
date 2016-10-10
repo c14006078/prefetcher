@@ -65,4 +65,4 @@ L1-cache-test: default
 	  ./time_sse_prefetch_align > /dev/null
 
 clean:
-	$(RM) $(EXECUTABLE)
+	$(RM) $(EXECUTABLE) *.o
