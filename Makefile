@@ -22,7 +22,7 @@ default: impl.o time_test.c main.c
 	$(CC) $(CFLAGS) impl.o time_test.c -DSSE_PREFETCH -o time_sse_prefetch
 #	$(CC) $(CFLAGS) impl.o time_test.c -DSSE -DALIGN=16 -o time_sse_align
 #	$(CC) $(CFLAGS) impl.o time_test.c -DSSE_PREFETCH -DALIGN=16 -o time_sse_prefetch_align
-	$(CC) $(CFLAGS) impl.o time_test.c -DAVX -o time_sse
+	$(CC) $(CFLAGS) impl.o time_test.c -DAVX -o time_avx
 	$(CC) $(CFLAGS) impl.o time_test.c -DSSE_PTHREAD -o time_sse_pthread
 	$(CC) $(CFLAGS) impl.o time_test.c -DSSE_PTHREAD_PREFETCH -o time_sse_pthread_prefetch
 
