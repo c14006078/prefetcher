@@ -87,6 +87,14 @@ int main(int argc, char *argv[])
         printf("avx: \t\t %ld us\n", diff_in_us(start, end));
 #endif
 
+#ifdef SSE_PTHREAD
+        clock_gettime(CLOCK_REALTIME, &start);
+        sse_pthread_transpose(src, out, TEST_W, TEST_H, 8);//FIXME: dynamic
+        clock_gettime(CLOCK_REALTIME, &end);
+        printf("sse pthread: \t\t %ld us\n", diff_in_us(start, end));
+#endif
+
+
 #ifdef NAIVE
         clock_gettime(CLOCK_REALTIME, &start);
         naive_transpose(src, out, TEST_W, TEST_H);

@@ -262,4 +262,92 @@ void avx_transpose(int *src, int *dst, int w, int h)
     }
 }
 
+//sse pthread version
+void sse_pthread_transpose(int *src, int *dst, int w, int h, int thrd_num)
+{
+    pthread_t *tid = (pthread_t *) malloc(sizeof(pthread_t) * thrd_num);   
+    sse_arg* arg = (sse_arg*) malloc(sizeof(sse_arg) * thrd_num);
+
+    assert((h % thrd_num) == 0 && "Matrix size should be divisible by Thread Num");
+
+    int split = h / thrd_num;//split the matrix
+    for(int i = 0; i < thrd_num; i++) {
+        arg[i] = new_sse_arg(src + i * split * w, dst + i * split, w, split);
+        pthread_create(&tid[i], NULL, (void *) &sse_thread, (void *) arg[i]);
+        //pthread_join(tid[i], NULL);
+    }
+
+    for(int i = 0; i < thrd_num; i++)
+        pthread_join(tid[i], NULL);
+}
+
+void sse_thread(void *_arg)
+{
+    sse_arg arg = (sse_arg) _arg;
+
+    int *src = arg->src;
+    int *dst = arg->dst;
+    int w = arg->w;
+    int h = arg->h;
+
+#ifdef DEBUG
+    static int sse_times = 0;
+#endif
+    for (int x = 0; x < w; x += 4) {
+        for (int y = 0; y < h; y += 4) {
+            __m128i I0 = _mm_loadu_si128((__m128i *)(src + (y + 0) * w + x));
+            __m128i I1 = _mm_loadu_si128((__m128i *)(src + (y + 1) * w + x));
+            __m128i I2 = _mm_loadu_si128((__m128i *)(src + (y + 2) * w + x));
+            __m128i I3 = _mm_loadu_si128((__m128i *)(src + (y + 3) * w + x));
+
+#ifdef DEBUG
+            if( sse_times < 1) {
+                printf("load\n");
+                show_sse_mtx(I0, I1, I2, I3);
+            }
+#endif
+            __m128i T0 = _mm_unpacklo_epi32(I0, I1);
+            __m128i T1 = _mm_unpacklo_epi32(I2, I3);
+            __m128i T2 = _mm_unpackhi_epi32(I0, I1);
+            __m128i T3 = _mm_unpackhi_epi32(I2, I3);
+
+#ifdef DEBUG
+            if( sse_times < 1) {
+                printf("unpacklo/hi 32\n");
+                show_sse_mtx(T0, T1, T2, T3);
+            }
+#endif
+
+            I0 = _mm_unpacklo_epi64(T0, T1);
+            I1 = _mm_unpackhi_epi64(T0, T1);
+            I2 = _mm_unpacklo_epi64(T2, T3);
+            I3 = _mm_unpackhi_epi64(T2, T3);
+
+#ifdef DEBUG
+            if( sse_times < 1) {
+                printf("unpacklo/hi 64\n");
+                show_sse_mtx(I0, I1, I2, I3);
+            }
+#endif
+
+            _mm_storeu_si128((__m128i *)(dst + ((x + 0) * w) + y), I0);
+            _mm_storeu_si128((__m128i *)(dst + ((x + 1) * w) + y), I1);
+            _mm_storeu_si128((__m128i *)(dst + ((x + 2) * w) + y), I2);
+            _mm_storeu_si128((__m128i *)(dst + ((x + 3) * w) + y), I3);
+        }
+    }
+}
+
+sse_arg new_sse_arg(int* src, int* dst, int w, int h)
+{
+    sse_arg arg = (sse_arg) malloc(sizeof(struct _sse));
+
+    arg->src = src;
+    arg->dst = dst;
+    arg->w   =   w;
+    arg->h   =   h;
+
+    return arg;
+}
+
 #endif /* TRANSPOSE_IMPL */
