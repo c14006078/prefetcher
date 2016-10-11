@@ -3,7 +3,7 @@ CFLAGS = -msse2 -mavx -mavx2 -pthread --std gnu99 -O0 -Wall
 EXECUTABLE = \
 	main time_naive time_sse time_sse_prefetch \
     time_sse_align time_sse_prefetch \
-    time_avx time_sse_pthread
+    time_avx time_sse_pthread time_sse_pthread_prefetch
 
 #Debug version.
 ifeq ($(strip $(DEBUG)),1)
@@ -24,6 +24,7 @@ default: impl.o time_test.c main.c
 #	$(CC) $(CFLAGS) impl.o time_test.c -DSSE_PREFETCH -DALIGN=16 -o time_sse_prefetch_align
 	$(CC) $(CFLAGS) impl.o time_test.c -DAVX -o time_sse
 	$(CC) $(CFLAGS) impl.o time_test.c -DSSE_PTHREAD -o time_sse_pthread
+	$(CC) $(CFLAGS) impl.o time_test.c -DSSE_PTHREAD_PREFETCH -o time_sse_pthread_prefetch
 
 
 time: default
@@ -34,6 +35,7 @@ time: default
 #	time ./time_sse_prefetch_align
 	time ./time_avx
 	time ./time_sse_pthread
+	time ./time_sse_pthread_prefetch
 
 cache-test: default
 	perf stat --repeat 100 \
@@ -57,6 +59,9 @@ cache-test: default
 	perf stat --repeat 100 \
 	 -e cache-misses,cache-references,instructions,cycles \
 	  ./time_sse_pthread > /dev/null
+	perf stat --repeat 100 \
+	 -e cache-misses,cache-references,instructions,cycles \
+	  ./time_sse_pthread_prefetch > /dev/null
 
 L1-cache-test: default
 	perf stat --repeat 100 \
@@ -80,6 +85,9 @@ L1-cache-test: default
 	perf stat --repeat 100 \
 	 -e L1-dcache-load-misses,L1-dcache-store-misses,L1-dcache-prefetch-misses,L1-icache-load-misses \
 	  ./time_sse_pthread > /dev/null
+	perf stat --repeat 100 \
+	 -e L1-dcache-load-misses,L1-dcache-store-misses,L1-dcache-prefetch-misses,L1-icache-load-misses \
+	  ./time_sse_pthread_prefetch > /dev/null
 
 clean:
 	$(RM) $(EXECUTABLE) *.o

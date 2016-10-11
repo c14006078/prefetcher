@@ -108,6 +108,11 @@ int main(int argc, char *argv[])
         printf("sse pthread: \t %ld us\n", diff_in_us(start, end));
 
         clock_gettime(CLOCK_REALTIME, &start);
+        sse_pthread_transpose(src, out1, TEST_W, TEST_H, 8);
+        clock_gettime(CLOCK_REALTIME, &end);
+        printf("sse pthread prefetch: \t %ld us\n", diff_in_us(start, end));
+
+        clock_gettime(CLOCK_REALTIME, &start);
         naive_transpose(src, out2, TEST_W, TEST_H);
         clock_gettime(CLOCK_REALTIME, &end);
         printf("naive: \t\t %ld us\n", diff_in_us(start, end));

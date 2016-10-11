@@ -265,7 +265,7 @@ void avx_transpose(int *src, int *dst, int w, int h)
 //sse pthread version
 void sse_pthread_transpose(int *src, int *dst, int w, int h, int thrd_num)
 {
-    pthread_t *tid = (pthread_t *) malloc(sizeof(pthread_t) * thrd_num);   
+    pthread_t *tid = (pthread_t *) malloc(sizeof(pthread_t) * thrd_num);
     sse_arg* arg = (sse_arg*) malloc(sizeof(sse_arg) * thrd_num);
 
     assert((h % thrd_num) == 0 && "Matrix size should be divisible by Thread Num");
@@ -280,6 +280,8 @@ void sse_pthread_transpose(int *src, int *dst, int w, int h, int thrd_num)
     for(int i = 0; i < thrd_num; i++)
         pthread_join(tid[i], NULL);
 }
+
+
 
 void sse_thread(void *_arg)
 {
@@ -329,6 +331,65 @@ void sse_thread(void *_arg)
                 show_sse_mtx(I0, I1, I2, I3);
             }
 #endif
+
+            _mm_storeu_si128((__m128i *)(dst + ((x + 0) * w) + y), I0);
+            _mm_storeu_si128((__m128i *)(dst + ((x + 1) * w) + y), I1);
+            _mm_storeu_si128((__m128i *)(dst + ((x + 2) * w) + y), I2);
+            _mm_storeu_si128((__m128i *)(dst + ((x + 3) * w) + y), I3);
+        }
+    }
+}
+
+//sse pthread prefetch version
+void sse_pthread_prefetch_transpose(int *src, int *dst, int w, int h, int thrd_num)
+{
+    pthread_t *tid = (pthread_t *) malloc(sizeof(pthread_t) * thrd_num);
+    sse_arg* arg = (sse_arg*) malloc(sizeof(sse_arg) * thrd_num);
+
+    assert((h % thrd_num) == 0 && "Matrix size should be divisible by Thread Num");
+
+    int split = h / thrd_num;//split the matrix
+    for(int i = 0; i < thrd_num; i++) {
+        arg[i] = new_sse_arg(src + i * split * w, dst + i * split, w, split);
+        pthread_create(&tid[i], NULL, (void *) &sse_prefetch_thread, (void *) arg[i]);
+        //pthread_join(tid[i], NULL);
+    }
+
+    for(int i = 0; i < thrd_num; i++)
+        pthread_join(tid[i], NULL);
+}
+
+void sse_prefetch_thread(void *_arg)
+{
+    sse_arg arg = (sse_arg) _arg;
+
+    int *src = arg->src;
+    int *dst = arg->dst;
+    int w = arg->w;
+    int h = arg->h;
+
+    register __m128i I0, I1, I2, I3, T0, T1, T2, T3;
+    for (register int x = 0; x < w; x += 4) {
+        for (register int y = 0; y < h; y += 4) {
+#define PFDIST  8
+
+            _mm_prefetch(src+(y + PFDIST + 0) *w + x, _MM_HINT_T0);
+            _mm_prefetch(src+(y + PFDIST + 1) *w + x, _MM_HINT_T0);
+            _mm_prefetch(src+(y + PFDIST + 2) *w + x, _MM_HINT_T0);
+            _mm_prefetch(src+(y + PFDIST + 3) *w + x, _MM_HINT_T0);
+
+            I0 = _mm_load_si128 ((__m128i *)(src + (y + 0) * w + x));
+            I1 = _mm_load_si128 ((__m128i *)(src + (y + 1) * w + x));
+            I2 = _mm_load_si128 ((__m128i *)(src + (y + 2) * w + x));
+            I3 = _mm_load_si128 ((__m128i *)(src + (y + 3) * w + x));
+            T0 = _mm_unpacklo_epi32(I0, I1);
+            T1 = _mm_unpacklo_epi32(I2, I3);
+            T2 = _mm_unpackhi_epi32(I0, I1);
+            T3 = _mm_unpackhi_epi32(I2, I3);
+            I0 = _mm_unpacklo_epi64(T0, T1);
+            I1 = _mm_unpackhi_epi64(T0, T1);
+            I2 = _mm_unpacklo_epi64(T2, T3);
+            I3 = _mm_unpackhi_epi64(T2, T3);
 
             _mm_storeu_si128((__m128i *)(dst + ((x + 0) * w) + y), I0);
             _mm_storeu_si128((__m128i *)(dst + ((x + 1) * w) + y), I1);
