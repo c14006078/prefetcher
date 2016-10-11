@@ -80,6 +80,13 @@ int main(int argc, char *argv[])
         printf("sse: \t\t %ld us\n", diff_in_us(start, end));
 #endif
 
+#ifdef AVX
+        clock_gettime(CLOCK_REALTIME, &start);
+        avx_transpose(src, out, TEST_W, TEST_H);
+        clock_gettime(CLOCK_REALTIME, &end);
+        printf("avx: \t\t %ld us\n", diff_in_us(start, end));
+#endif
+
 #ifdef NAIVE
         clock_gettime(CLOCK_REALTIME, &start);
         naive_transpose(src, out, TEST_W, TEST_H);

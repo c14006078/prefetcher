@@ -68,7 +68,8 @@ int main(int argc, char *argv[])
             printf("\n");
         }
         printf("\n");
-        sse_transpose(testin, testout, cols, rows);
+        //sse_transpose(testin, testout, cols, rows);
+        avx_transpose(testin, testout, cols, rows);
         for (int y = 0; y < rows; y++) {
             for (int x = 0; x < cols; x++)
                 printf(" %2d", testout[y * cols + x]);
