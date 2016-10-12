@@ -80,6 +80,14 @@ int main(int argc, char *argv[])
         printf("sse: \t\t %ld us\n", diff_in_us(start, end));
 #endif
 
+#ifdef SSE_UNPACK32
+        clock_gettime(CLOCK_REALTIME, &start);
+        sse_unpack32_transpose(src, out, TEST_W, TEST_H);
+        clock_gettime(CLOCK_REALTIME, &end);
+        printf("sse unpack32: \t\t %ld us\n", diff_in_us(start, end));
+#endif
+
+
 #ifdef AVX
         clock_gettime(CLOCK_REALTIME, &start);
         avx_transpose(src, out, TEST_W, TEST_H);

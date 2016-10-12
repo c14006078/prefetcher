@@ -70,7 +70,8 @@ int main(int argc, char *argv[])
         printf("\n");
         //sse_transpose(testin, testout, cols, rows);
         //avx_transpose(testin, testout, cols, rows);
-        sse_pthread_transpose(testin, testout, cols, rows, 2);
+        //sse_pthread_transpose(testin, testout, cols, rows, 2);
+        sse_unpack32_transpose(testin, testout, cols, rows);
         for (int y = 0; y < rows; y++) {
             for (int x = 0; x < cols; x++)
                 printf(" %2d", testout[y * cols + x]);
@@ -101,6 +102,11 @@ int main(int argc, char *argv[])
         sse_transpose(src, out1, TEST_W, TEST_H);
         clock_gettime(CLOCK_REALTIME, &end);
         printf("sse: \t\t %ld us\n", diff_in_us(start, end));
+
+        clock_gettime(CLOCK_REALTIME, &start);
+        sse_unpack32_transpose(src, out1, TEST_W, TEST_H);
+        clock_gettime(CLOCK_REALTIME, &end);
+        printf("sse unpack32: \t\t %ld us\n", diff_in_us(start, end));
 
         clock_gettime(CLOCK_REALTIME, &start);
         sse_pthread_transpose(src, out1, TEST_W, TEST_H, 8);

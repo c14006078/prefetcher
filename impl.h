@@ -36,3 +36,5 @@ void sse_thread(void *_arg);
 void sse_pthread_prefetch_transpose(int *src, int *dst, int w, int h, int thrd_num);
 
 void sse_prefetch_thread(void *_arg);
+
+void sse_unpack32_transpose(int *src, int *dst, int w, int h);

@@ -411,4 +411,58 @@ sse_arg new_sse_arg(int* src, int* dst, int w, int h)
     return arg;
 }
 
+//Just use unpack32 no 64
+void sse_unpack32_transpose(int *src, int *dst, int w, int h)
+{
+#ifdef DEBUG
+    static int sse_unpack32_times = 0;
+#endif
+    for (int x = 0; x < w; x += 4) {
+        for (int y = 0; y < h; y += 4) {
+            __m128i I0 = _mm_loadu_si128((__m128i *)(src + (y + 0) * w + x));
+            __m128i I1 = _mm_loadu_si128((__m128i *)(src + (y + 1) * w + x));
+            __m128i I2 = _mm_loadu_si128((__m128i *)(src + (y + 2) * w + x));
+            __m128i I3 = _mm_loadu_si128((__m128i *)(src + (y + 3) * w + x));
+
+#ifdef DEBUG
+            if( sse_unpack32_times < 1) {
+                printf("load\n");
+                show_sse_mtx(I0, I1, I2, I3);
+            }
+#endif
+            __m128i T0 = _mm_unpacklo_epi32(I0, I2);
+            __m128i T1 = _mm_unpacklo_epi32(I1, I3);
+            __m128i T2 = _mm_unpackhi_epi32(I0, I2);
+            __m128i T3 = _mm_unpackhi_epi32(I1, I3);
+
+#ifdef DEBUG
+            if( sse_unpack32_times < 1) {
+                printf("unpacklo/hi 32\n");
+                show_sse_mtx(T0, T1, T2, T3);
+            }
+#endif
+
+            I0 = _mm_unpacklo_epi32(T0, T1);
+            I1 = _mm_unpackhi_epi32(T0, T1);
+            I2 = _mm_unpacklo_epi32(T2, T3);
+            I3 = _mm_unpackhi_epi32(T2, T3);
+
+#ifdef DEBUG
+            if( sse_times < 1) {
+                printf("unpacklo/hi 32\n");
+                show_sse_mtx(I0, I1, I2, I3);
+            }
+#endif
+
+            _mm_storeu_si128((__m128i *)(dst + ((x + 0) * h) + y), I0);
+            _mm_storeu_si128((__m128i *)(dst + ((x + 1) * h) + y), I1);
+            _mm_storeu_si128((__m128i *)(dst + ((x + 2) * h) + y), I2);
+            _mm_storeu_si128((__m128i *)(dst + ((x + 3) * h) + y), I3);
+        }
+    }
+#ifdef DEBUG
+    sse_times++;
+#endif
+}
+
 #endif /* TRANSPOSE_IMPL */
